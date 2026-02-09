@@ -40,6 +40,16 @@ button{
 </head>
 
 <body>
+  <script>
+  atOptions = {
+    'key' : '6588bd3d2aa2513b3d2d36e1d7f59694',
+    'format' : 'iframe',
+    'height' : 50,
+    'width' : 320,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/6588bd3d2aa2513b3d2d36e1d7f59694/invoke.js"></script>
 
 <!-- LOGIN -->
 <div id="login" class="card">
@@ -225,6 +235,156 @@ async function callAI(text){
   }
 }
 </script>
+
+</body>
+</html>
+  <div id="expBox" class="card hidden">
+    <h3>AI Teacher</h3>
+    <div id="explain"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const API_KEY = "AIzaSyAGquvk71s5oP67dTYUpGouOHNjWpPsY8o"; // Replace with your actual Gemini API key
+const MODEL_NAME = "gemini-3-flash-preview";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+const $ = id => document.getElementById(id);
+
+/* Fill class dropdown */
+for(let i=1;i<=12;i++){
+  const o=document.createElement("option"); o.value=i; o.text=i; $("cls").appendChild(o);
+}
+
+/* Subjects by class */
+const subjectsByClass={
+  1:["Maths","EVS","English","Hindi"],
+  2:["Maths","EVS","English","Hindi"],
+  3:["Maths","EVS","English","Hindi"],
+  4:["Maths","EVS","English","Hindi"],
+  5:["Maths","EVS","English","Hindi"],
+  6:["Maths","Science","English","Social Science"],
+  7:["Maths","Science","English","Social Science"],
+  8:["Maths","Science","English","Civics","Geography"],
+  9:["Maths","Science","English","History","Economics"],
+  10:["Maths","Science","English","History","Economics"],
+  11:["Physics","Chemistry","Maths","Biology"],
+  12:["Physics","Chemistry","Maths","Biology"]
+};
+
+let user={};
+
+/* =============== ENTER =============== */
+$("enterBtn").onclick = () => {
+  const nameEl=$("name"), clsEl=$("cls"), langEl=$("lang"),
+        stateEl=$("state"), distEl=$("district"), blockEl=$("block");
+
+  if(!nameEl.value.trim() || !clsEl.value || !langEl.value ||
+     !stateEl.value.trim() || !distEl.value.trim() || !blockEl.value.trim()){
+    alert("Fill all details properly");
+    return;
+  }
+
+  user={
+    name:nameEl.value.trim(), cls:clsEl.value, lang:langEl.value,
+    state:stateEl.value.trim(), district:distEl.value.trim(), block:blockEl.value.trim()
+  };
+
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("welcome").innerText = `👋 ${user.name} | Class ${user.cls} | ${user.lang}`;
+
+  loadSubjects();
+  showChat();
+};
+
+/* Views */
+function showChat(){
+  $("chatBox").classList.remove("hidden");
+  $("subjectsBox").classList.add("hidden");
+  $("expBox").classList.add("hidden");
+}
+function showSubjects(){
+  $("subjectsBox").classList.remove("hidden");
+  $("chatBox").classList.add("hidden");
+  $("expBox").classList.add("hidden");
+}
+
+/* Subjects */
+function loadSubjects(){
+  const box=$("subjects"); box.innerHTML="";
+  subjectsByClass[user.cls].forEach(s=>{
+    const d=document.createElement("div");
+    d.className="tile"; d.innerText=s;
+    d.onclick=()=>explainSubject(s);
+    box.appendChild(d);
+  });
+}
+
+/* Chat */
+async function sendChat(){
+  const q=$("chatInput").value.trim();
+  if(!q) return;
+  $("chat").innerHTML+=`<div class="user">${q}</div>`;
+  $("chatInput").value="";
+  $("chat").innerHTML+=`<div class="ai">Thinking…</div>`;
+  $("chat").lastChild.innerHTML = await callAI(`Reply in ${user.lang}. ${q}`);
+}
+
+/* Subject explain */
+async function explainSubject(sub){
+  $("expBox").classList.remove("hidden");
+  $("subjectsBox").classList.add("hidden");
+  $("chatBox").classList.add("hidden");
+  $("explain").innerHTML="Analysing syllabus…";
+
+  const prompt = `
+Reply in ${user.lang}.
+Student: ${user.name}
+Class: ${user.cls}
+Location: ${user.block}, ${user.district}, ${user.state}
+Subject: ${sub}
+
+Analyse chapters, then explain step-by-step.
+Include important questions, answers and formulas.
+Use simple Indian-student friendly language.
+  `;
+  $("explain").innerHTML = await callAI(prompt);
+}
+
+/* AI Call */
+async function callAI(text){
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: text,
+        temperature: 0.7,
+        candidate_count: 1,
+        max_output_tokens: 500
+      })
+    });
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.[0]?.text
+      ?.replace(/\n/g, "<br>") || "⚠️ No response (Preview model unstable)";
+  } catch (err) {
+    console.error(err);
+    return "❌ Network / API error";
+  }
+}
+</script>
+<script>
+  atOptions = {
+    'key' : '05a5399e9d9daa0638abcd6c27e6485b',
+    'format' : 'iframe',
+    'height' : 60,
+    'width' : 468,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/05a5399e9d9daa0638abcd6c27e6485b/invoke.js"></script>
 
 </body>
 </html>
