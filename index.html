@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Study AI – Gemini 3 Flash Preview (FINAL)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#020617; --glass:rgba(255,255,255,.08); --grad:linear-gradient(135deg,#7c3aed,#38bdf8);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:system-ui;
+  background:radial-gradient(circle at top,#7c3aed,#020617 65%);
+  color:#fff;
+}
+.hidden{display:none}
+.card{
+  margin:14px; padding:18px; border-radius:18px;
+  background:var(--glass); backdrop-filter:blur(16px);
+}
+h2,h3{margin:0 0 10px}
+input,select{
+  width:100%; padding:14px; margin:10px 0;
+  border-radius:14px; border:none; background:#020617; color:#fff;
+}
+button{
+  width:100%; padding:15px; border:none; border-radius:16px;
+  background:var(--grad); color:#fff; font-weight:800; cursor:pointer;
+}
+.grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+.tile{background:#020617; padding:16px; border-radius:16px; text-align:center; cursor:pointer}
+#chat,#explain{max-height:55vh; overflow-y:auto; line-height:1.7}
+.user{color:#60a5fa; margin:6px 0}
+.ai{color:#a7f3d0; margin:6px 0}
+.topbar{display:flex; gap:10px}
+.topbar button{flex:1}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="card">
+  <h2>🇮🇳 Study AI</h2>
+
+  <input id="name" placeholder="Student Name">
+
+  <select id="cls">
+    <option value="">Select Class</option>
+  </select>
+
+  <select id="lang">
+    <option value="">Select Language</option>
+    <option>Hindi</option><option>English</option><option>Bengali</option>
+    <option>Tamil</option><option>Telugu</option><option>Marathi</option>
+    <option>Gujarati</option><option>Punjabi</option><option>Urdu</option>
+    <option>Kannada</option><option>Malayalam</option><option>Odia</option>
+  </select>
+
+  <input id="state" placeholder="State">
+  <input id="district" placeholder="District">
+  <input id="block" placeholder="Block">
+
+  <button id="enterBtn">Enter Study Space</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+  <div class="card">
+    <div class="topbar">
+      <button onclick="showChat()">💬 Chat with AI</button>
+      <button onclick="showSubjects()">📚 Subjects</button>
+    </div>
+    <h3 id="welcome"></h3>
+  </div>
+
+  <div id="chatBox" class="card hidden">
+    <div id="chat"></div>
+    <input id="chatInput" placeholder="Ask anything…">
+    <button onclick="sendChat()">Send</button>
+  </div>
+
+  <div id="subjectsBox" class="card hidden">
+    <h3>Subjects</h3>
+    <div id="subjects" class="grid"></div>
+  </div>
+
+  <div id="expBox" class="card hidden">
+    <h3>AI Teacher</h3>
+    <div id="explain"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const API_KEY = "AIzaSyAGquvk71s5oP67dTYUpGouOHNjWpPsY8o"; // Replace with your actual Gemini API key
+const MODEL_NAME = "gemini-3-flash-preview";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+const $ = id => document.getElementById(id);
+
+/* Fill class dropdown */
+for(let i=1;i<=12;i++){
+  const o=document.createElement("option"); o.value=i; o.text=i; $("cls").appendChild(o);
+}
+
+/* Subjects by class */
+const subjectsByClass={
+  1:["Maths","EVS","English","Hindi"],
+  2:["Maths","EVS","English","Hindi"],
+  3:["Maths","EVS","English","Hindi"],
+  4:["Maths","EVS","English","Hindi"],
+  5:["Maths","EVS","English","Hindi"],
+  6:["Maths","Science","English","Social Science"],
+  7:["Maths","Science","English","Social Science"],
+  8:["Maths","Science","English","Civics","Geography"],
+  9:["Maths","Science","English","History","Economics"],
+  10:["Maths","Science","English","History","Economics"],
+  11:["Physics","Chemistry","Maths","Biology"],
+  12:["Physics","Chemistry","Maths","Biology"]
+};
+
+let user={};
+
+/* =============== ENTER =============== */
+$("enterBtn").onclick = () => {
+  const nameEl=$("name"), clsEl=$("cls"), langEl=$("lang"),
+        stateEl=$("state"), distEl=$("district"), blockEl=$("block");
+
+  if(!nameEl.value.trim() || !clsEl.value || !langEl.value ||
+     !stateEl.value.trim() || !distEl.value.trim() || !blockEl.value.trim()){
+    alert("Fill all details properly");
+    return;
+  }
+
+  user={
+    name:nameEl.value.trim(), cls:clsEl.value, lang:langEl.value,
+    state:stateEl.value.trim(), district:distEl.value.trim(), block:blockEl.value.trim()
+  };
+
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("welcome").innerText = `👋 ${user.name} | Class ${user.cls} | ${user.lang}`;
+
+  loadSubjects();
+  showChat();
+};
+
+/* Views */
+function showChat(){
+  $("chatBox").classList.remove("hidden");
+  $("subjectsBox").classList.add("hidden");
+  $("expBox").classList.add("hidden");
+}
+function showSubjects(){
+  $("subjectsBox").classList.remove("hidden");
+  $("chatBox").classList.add("hidden");
+  $("expBox").classList.add("hidden");
+}
+
+/* Subjects */
+function loadSubjects(){
+  const box=$("subjects"); box.innerHTML="";
+  subjectsByClass[user.cls].forEach(s=>{
+    const d=document.createElement("div");
+    d.className="tile"; d.innerText=s;
+    d.onclick=()=>explainSubject(s);
+    box.appendChild(d);
+  });
+}
+
+/* Chat */
+async function sendChat(){
+  const q=$("chatInput").value.trim();
+  if(!q) return;
+  $("chat").innerHTML+=`<div class="user">${q}</div>`;
+  $("chatInput").value="";
+  $("chat").innerHTML+=`<div class="ai">Thinking…</div>`;
+  $("chat").lastChild.innerHTML = await callAI(`Reply in ${user.lang}. ${q}`);
+}
+
+/* Subject explain */
+async function explainSubject(sub){
+  $("expBox").classList.remove("hidden");
+  $("subjectsBox").classList.add("hidden");
+  $("chatBox").classList.add("hidden");
+  $("explain").innerHTML="Analysing syllabus…";
+
+  const prompt = `
+Reply in ${user.lang}.
+Student: ${user.name}
+Class: ${user.cls}
+Location: ${user.block}, ${user.district}, ${user.state}
+Subject: ${sub}
+
+Analyse chapters, then explain step-by-step.
+Include important questions, answers and formulas.
+Use simple Indian-student friendly language.
+  `;
+  $("explain").innerHTML = await callAI(prompt);
+}
+
+/* AI Call */
+async function callAI(text){
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: text,
+        temperature: 0.7,
+        candidate_count: 1,
+        max_output_tokens: 500
+      })
+    });
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.[0]?.text
+      ?.replace(/\n/g, "<br>") || "⚠️ No response (Preview model unstable)";
+  } catch (err) {
+    console.error(err);
+    return "❌ Network / API error";
+  }
+}
+</script>
+
+</body>
+</html>
