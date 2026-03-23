@@ -3203,7 +3203,7 @@ body { overflow-x: hidden; }
         bookingLocks[id] = true;
         try { 
             const b = state.pendingBookings[id];
-            if (!b || b.status !=='booking_pending') return;
+            if (!b || b.status !== 'booking_pending') return;
 
             const updates = {};
             updates[`pendingBookings/${id}/status`] = status;
